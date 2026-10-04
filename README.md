@@ -172,59 +172,6 @@ A channel without credentials is skipped silently.
 | Payments | Razorpay, Stripe Checkout, development-only test provider |
 | Quality | Vitest, TypeScript type-check, PWA shell |
 
-Keyboard-first: <kbd>Ctrl</kbd>+<kbd>K</kbd> command palette · <kbd>Ctrl</kbd>+<kbd>J</kbd> Copilot.
 
-## ✅ What is done so far
-
-**Database (Supabase Postgres)**
-- 43 tables across 6 domains, 8 migrations, 76 Row Level Security policies
-- Business rules in SQL functions: `place_order`, `advance_prototype`, `respond_quotation`, `submit_quiz`, `adjust_stock`, `receive_purchase_order`, `cancel_order`
-- Triggers write notifications and audit logs
-
-**App**
-- Auth, onboarding, role-based access with permission keys
-- Store: catalog, cart, atomic checkout, orders with status timeline, refunds
-- Quotations and the 12-stage prototyping workspace with tasks and comments
-- LMS: enrollment, lesson progress, server-graded quizzes, certificates with public `/verify-certificate/:code`
-- CRM pipeline, inventory and purchase orders, invoices and expenses, documents, support tickets with live replies, reports with safe CSV export
-- Floating AI Copilot with confirm-before-act actions, daily usage limit and audit trail
-- Dashboard, notifications page (in-app, email, SMS), command palette, PWA shell
-- Vitest suite: CSV safety, prototype workflow, validation, AI action allow-list
-
-**Fixes made during development**
-- Checkout now hands off to the provider: **Stripe redirects to hosted checkout** and **Razorpay opens its popup** (previously the response was ignored)
-- Retrying payment reuses the same order, so no duplicates
-- Payment errors now show the real reason instead of a generic message
-- **CORS fix** (`x-client-info` header) in `payment-create`, `refund-create` and `ai-chat`, which caused "payment could not be started" and "assistant is unavailable"
-- Stripe webhook now confirms `checkout.session.completed`
-
-**Also built:** a lightweight HTML/CSS/JS + Supabase starter (3D three.js hero, store, prototypes, learn, support) with a compact RLS schema.
-
-## 🗺️ Roadmap
-
-| Now (shipped) | Next | Later |
-|---|---|---|
-| Tenant-safe schema + RLS | Assignments and grading | Warehouses, batch / serial tracking, RFQs |
-| Commerce, quotes, prototypes | Calendar, task assignees, attachments | AI document analysis, recommendations |
-| LMS, CRM, inventory, finance | Role editor UI, invitations, MFA UI | English, Telugu, Hindi (i18n) |
-| AI Copilot with confirmations | Partial refunds, server-side PDF, Excel export | Integration tests against live Supabase |
-
-Remaining spec tables: branches, departments, variants, coupons, reviews. Future idea (not built): live telemetry from customer IoT prototypes through Supabase Realtime.
-
-## 🧪 Tests
-
-```bash
-npm test          # vitest
-npm run typecheck
-```
-
-## 📄 License
-
-Add a `LICENSE` file of your choice (MIT is a common default).
-
-<div align="center">
-
-**Forge**: sell, build and teach on one secure platform.<br/>
-Made by **Team Blasters**
 
 </div>
