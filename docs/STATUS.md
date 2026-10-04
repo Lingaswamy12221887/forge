@@ -1,0 +1,2 @@
+# Not yet implemented
+Assignments and grading; warehouses/locations, batch/serial tracking, multi-line purchase orders, RFQs, supplier invoices; CRM contacts/calls/activities; partial refunds; document versions are numbered but older versions are not browsable; calendar; i18n; task assignee picker and file attachments on tasks; server-side PDF generation; Excel export; AI document analysis; recommendations; role editor UI and user invitations; MFA UI; integration tests against a live Supabase; remaining spec tables (branches, departments, variants, coupons, reviews, etc.).
