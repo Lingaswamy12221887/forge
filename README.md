@@ -1,4 +1,230 @@
-# 🚀 Forge ### Multi-tenant commerce, prototyping, and training platform built with modern web technologies[cite: 1]. https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=1200" alt="Forge Platform Banner" width="100%" style="border-radius: 20px;" />
-https://img.shields.io/badge/React-19-blue?style=flat-square&logo=react" alt="React" /> https://img.shields.io/badge/TypeScript-Ready-blue?style=flat-square&logo=typescript" alt="TypeScript" /> https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=flat-square&logo=tailwind-css" alt="Tailwind" /> https://img.shields.io/badge/Supabase-Backend-3ECF8E?style=flat-square&logo=supabase" alt="Supabase" /> https://img.shields.io/badge/TanStack_Query-V5-FF4154?style=flat-square&logo=react-query" alt="TanStack Query" />
+<div align="center">
 
---- ## 🛠️ Tech Stack & Architecture * **Frontend:** React, TypeScript, Vite, Tailwind CSS, TanStack Query, Zod[cite: 1]. * **Backend & Infrastructure:** Supabase (Auth, Postgres, Storage, Edge Functions, RLS)[cite: 1]. * **Security & Authorization:** Postgres Row Level Security (`auth_org()`, `has_perm()`) enforced at the database layer[cite: 1]. --- ## 📋 Status & Implemented Features * **Authentication & Onboarding:** Complete user registration, organization onboarding, and automatic Role-Based Access Control (RBAC) setup where the creator becomes the Organization Owner with full permissions[cite: 1]. * **Commerce & Catalog:** Multi-tenant product catalog, shopping cart with atomic checkout, and detailed order timelines[cite: 1]. * **Payments:** Support for Razorpay, Stripe, and test providers via Supabase Edge Functions (`payment-create`, `refund-create`, `payment-webhook`). *Note: Set `PAYMENTS_MODE=production` to disable the test provider[cite: 1].* * **Learning Management System (LMS):** Course modules, structured lessons, interactive quizzes, certificate generation, and public certificate verification via `/verify-certificate/:code`[cite: 1]. * **Support System:** Interactive support tickets and conversation threads[cite: 1]. * **AI Integration:** Floating AI assistant (triggered via `Ctrl+J`) powered by Anthropic/LLMs via Edge Functions[cite: 1]. The assistant proposes actions (`cancel_order`, `create_ticket`) which require explicit user confirmation before executing securely under the user's session[cite: 1]. * **Command Palette:** Quick navigation and system commands accessible via `Ctrl+K`[cite: 1]. * **Realtime Notifications:** In-app notifications via database triggers streamed in real-time, with optional external email and SMS dispatch[cite: 1]. --- ## ⚙️ Setup & Installation Guide https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=800" alt="Code Setup" width="100%" style="border-radius: 16px; margin: 16px 0;" /> 1. **Supabase Project Initialization:** Create a Supabase project[cite: 1]. Run migrations `0001_core.sql` through `0008`, then execute `supabase/seed.sql` in the SQL editor (or run `supabase db push`)[cite: 1]. 2. **Environment Configuration:** Copy `.env.example` to `.env` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`[cite: 1]. *(Note: No secret keys should use the `VITE_` prefix[cite: 1].)* 3. **Install Dependencies & Run:** ```bash npm install && npm run dev ``` 4. **Deploy AI Edge Function:** ```bash supabase functions deploy ai-chat supabase secrets set AI_PROVIDER=anthropic AI_API_KEY=... AI_MODEL=... ``` 5. **Production Deployment:** Deploy the frontend to Vercel with the two `VITE_` variables configured[cite: 1]. --- ## 🔒 Security Model Authorization is strictly enforced by Postgres RLS (`auth_org()`, `has_perm()`), ensuring security policies are never bypassed in the UI layer[cite: 1]. The AI function queries exclusively as the calling user, ensuring it cannot exceed that user's authorized access[cite: 1]. --- ## 🔔 Notifications (EmailJS + Twilio) Every critical event (orders, quotations, tickets, projects, certificates) creates an in-app notification via database triggers[cite: 1]. To enable email and SMS notifications: 1. Deploy the notification dispatcher function: `supabase functions deploy notify-dispatch --no-verify-jwt`[cite: 1]. 2. Set Supabase secrets: `NOTIFY_WEBHOOK_SECRET`, `EMAILJS_SERVICE_ID`, `EMAILJS_TEMPLATE_ID`, `EMAILJS_PUBLIC_KEY`, `EMAILJS_PRIVATE_KEY`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`[cite: 1]. 3. In the Supabase Dashboard, create a database webhook on the `notifications` table for `INSERT` events, targeting the `notify-dispatch` function with the HTTP header `x-webhook-secret: `[cite: 1]. 4. Configure EmailJS settings (enable API access for non-browser applications) and ensure template variables match `{{to_email}}`, `{{title}}`, and `{{message}}`[cite: 1]. --- ## 🧪 Testing Run the test suite (Vitest) for CSV safety and platform components[cite: 1]: ```bash npm test ```
+# ⚒️ Forge
+
+### Sell products. Build custom prototypes. Teach courses.
+**One secure, multi-tenant platform for electronics, IoT, robotics and 3D-printing businesses.**
+
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind-3-06B6D4?logo=tailwindcss&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ECF8E?logo=supabase&logoColor=white)
+![Stripe](https://img.shields.io/badge/Stripe-payments-635BFF?logo=stripe&logoColor=white)
+![Razorpay](https://img.shields.io/badge/Razorpay-India-0C2451)
+![Tests](https://img.shields.io/badge/tests-Vitest-6E9F18?logo=vitest&logoColor=white)
+![Status](https://img.shields.io/badge/status-MVP-f5a524)
+
+**Team Blasters**
+
+[Features](#-features) · [Architecture](#-architecture) · [Security](#-security-model) · [Quick start](#-quick-start) · [Progress](#-what-is-done-so-far) · [Roadmap](#-roadmap)
+
+</div>
+
+---
+
+## 🧩 The problem
+
+Small hardware businesses run on disconnected tools: a store here, quotes in email, project chats elsewhere, invoices in a spreadsheet, support in another inbox. Data is re-typed and goes stale. Many SaaS tools check permissions only in the UI, so one front-end bug can expose another company's data. AI chatbots either cannot use business data, or can change it with no confirmation.
+
+**Forge** puts it all behind one login, one organization and one database that enforces the rules.
+
+## ✨ Features
+
+| | Module | What it does |
+|---|---|---|
+| 🛒 | **Sell** | Catalog, cart, atomic checkout, Razorpay / Stripe / test provider, order timeline, refunds |
+| 🛠️ | **Build** | Prototype requests through a 12-stage workflow; quotations the customer accepts or rejects |
+| 🎓 | **Teach** | Courses, lessons, quizzes graded in SQL, progress, certificates with public verification |
+| 🏢 | **Operate** | CRM pipeline, inventory, purchase orders, invoices, expenses, documents, tickets, reports |
+| 🤖 | **Assist** | Forge Copilot answers questions and proposes actions. You confirm; Postgres decides |
+| 🔔 | **Notify** | In-app alerts via DB triggers + Realtime; optional email (EmailJS) and SMS (Twilio) |
+
+<details>
+<summary><b>The 12 prototype stages</b></summary>
+
+`Requested → Review → Requirements → Quotation → Approved → Design → Prototype → Testing → (Revision ↺ Prototype) → Production → Delivery → Completed`
+
+Rules live in SQL: `advance_prototype` locks the row, allows only the next valid stage and writes an audit entry. A client cannot skip stages.
+</details>
+
+<details>
+<summary><b>Who it serves</b></summary>
+
+Customers · Students · Sales and Support · Engineers and Managers · Inventory and Finance · Organization Owners
+</details>
+
+## 🏗️ Architecture
+
+```mermaid
+flowchart LR
+  A[React + TypeScript SPA<br/>Vercel] -->|user JWT| B[(Supabase<br/>Postgres + RLS)]
+  A -->|invoke| C[Edge Functions<br/>Deno]
+  C -->|as the user| B
+  C --> D[Stripe / Razorpay]
+  C --> E[Anthropic / OpenAI / Gemini]
+  C --> F[EmailJS / Twilio]
+  D -->|signed webhook| C
+  B --> G[Realtime + Storage]
+  G --> A
+```
+
+**Edge Functions (5):** `ai-chat` · `payment-create` · `payment-webhook` · `refund-create` · `notify-dispatch`. All secrets live here, never in the browser.
+
+### 💳 Payment flow
+
+```mermaid
+sequenceDiagram
+  participant U as Customer
+  participant W as Web app
+  participant F as payment-create
+  participant P as Stripe / Razorpay
+  participant H as payment-webhook
+  participant D as Postgres
+  U->>W: Place order and pay
+  W->>D: place_order() (atomic, stock checked)
+  W->>F: orderId + provider
+  F->>D: read total (RLS)
+  F->>P: create Checkout Session / Razorpay order
+  P-->>W: Stripe redirect URL / Razorpay popup
+  U->>P: Pays
+  P->>H: signed webhook
+  H->>D: verify signature + amount, mark paid
+```
+
+The browser never sends a price. The amount always comes from the database, and an order becomes `confirmed` only after a verified webhook.
+
+## 🔐 Security model
+
+| Layer | How |
+|---|---|
+| **Tenant isolation** | `organization_id` on every business row; `auth_org()` in every policy |
+| **Permissions** | `has_perm('key')` joins `user_roles` and `role_permissions`. UI hiding is cosmetic |
+| **AI runs as the user** | `ai-chat` queries with the caller's token, so it never exceeds their access |
+| **Confirm-before-act** | The AI only *proposes* `cancel_order` or `create_ticket`; the user presses Confirm; RLS still decides; it is audit-logged |
+| **No secrets in the browser** | Only the Supabase URL and anon key are public |
+| **Payments** | Server-side amounts, signed webhooks, test provider disabled when `PAYMENTS_MODE=production`, no card data stored |
+| **Input** | Zod schemas, DB check constraints, E.164 phone check, CSV formula-injection guard |
+
+```sql
+create policy prod_upd on products for update
+  using (organization_id = auth_org() and has_perm('products.update'))
+  with check (organization_id = auth_org());
+```
+
+## 🚀 Quick start
+
+```bash
+git clone <your-repo-url> && cd forge
+npm install
+cp .env.example .env        # fill VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+npm run dev
+```
+
+**1. Database.** In a new Supabase project, run `supabase/migrations/0001` to `0008` in order (or `supabase db push`), then `supabase/seed.sql`.
+
+**2. Sign up and onboard.** Register, then create your organization. You become Owner with every permission.
+
+**3. Deploy the Edge Functions and set secrets.**
+
+```bash
+supabase functions deploy ai-chat payment-create refund-create
+supabase functions deploy payment-webhook --no-verify-jwt
+supabase functions deploy notify-dispatch --no-verify-jwt
+
+supabase secrets set AI_PROVIDER=anthropic AI_API_KEY=... AI_MODEL=...
+supabase secrets set STRIPE_SECRET_KEY=sk_test_... STRIPE_WEBHOOK_SECRET=whsec_...
+supabase secrets set RAZORPAY_KEY_ID=... RAZORPAY_KEY_SECRET=... RAZORPAY_WEBHOOK_SECRET=...
+supabase secrets set SITE_URL=https://your-site.vercel.app PAYMENTS_MODE=development
+```
+
+**4. Webhooks.** Point each provider at `https://<project>.functions.supabase.co/payment-webhook?provider=stripe` (event `checkout.session.completed`) or `?provider=razorpay` (event `payment.captured`).
+
+**5. Deploy the frontend** to Vercel with the two `VITE_` variables.
+
+<details>
+<summary><b>Notifications (EmailJS + Twilio)</b></summary>
+
+1. Set `NOTIFY_WEBHOOK_SECRET`, `EMAILJS_*` and `TWILIO_*` secrets.
+2. Supabase Dashboard → Database → Webhooks → new webhook on `notifications` (INSERT) → `notify-dispatch`, with header `x-webhook-secret`.
+3. EmailJS template variables: `{{to_email}}`, `{{title}}`, `{{message}}`.
+
+A channel without credentials is skipped silently.
+</details>
+
+<details>
+<summary><b>Troubleshooting</b></summary>
+
+- **"Payment could not be started"**: the function is not deployed to this project, or a CORS preflight failed. Redeploy all functions and check the Network tab for the `payment-create` request.
+- **"The assistant is unavailable"**: set `AI_PROVIDER`, `AI_API_KEY` and `AI_MODEL`, redeploy `ai-chat`, and read its logs in Supabase.
+- **Order stays `pending` after paying**: the webhook is missing or the signing secret is wrong.
+- **Quick test without keys**: choose "Test payment" at checkout (works only while `PAYMENTS_MODE` is not `production`).
+</details>
+
+## 🧰 Tech stack
+
+| Area | Tools |
+|---|---|
+| Frontend | React 18, TypeScript 5, Vite 5, Tailwind CSS 3, React Router 6, Lucide |
+| Data | TanStack Query 5, Zod, Recharts |
+| Backend | Supabase: Postgres, Auth, Realtime, Storage, Edge Functions (Deno) |
+| AI | Provider abstraction: Anthropic, OpenAI or Gemini via env config |
+| Payments | Razorpay, Stripe Checkout, development-only test provider |
+| Quality | Vitest, TypeScript type-check, PWA shell |
+
+Keyboard-first: <kbd>Ctrl</kbd>+<kbd>K</kbd> command palette · <kbd>Ctrl</kbd>+<kbd>J</kbd> Copilot.
+
+## ✅ What is done so far
+
+**Database (Supabase Postgres)**
+- 43 tables across 6 domains, 8 migrations, 76 Row Level Security policies
+- Business rules in SQL functions: `place_order`, `advance_prototype`, `respond_quotation`, `submit_quiz`, `adjust_stock`, `receive_purchase_order`, `cancel_order`
+- Triggers write notifications and audit logs
+
+**App**
+- Auth, onboarding, role-based access with permission keys
+- Store: catalog, cart, atomic checkout, orders with status timeline, refunds
+- Quotations and the 12-stage prototyping workspace with tasks and comments
+- LMS: enrollment, lesson progress, server-graded quizzes, certificates with public `/verify-certificate/:code`
+- CRM pipeline, inventory and purchase orders, invoices and expenses, documents, support tickets with live replies, reports with safe CSV export
+- Floating AI Copilot with confirm-before-act actions, daily usage limit and audit trail
+- Dashboard, notifications page (in-app, email, SMS), command palette, PWA shell
+- Vitest suite: CSV safety, prototype workflow, validation, AI action allow-list
+
+**Fixes made during development**
+- Checkout now hands off to the provider: **Stripe redirects to hosted checkout** and **Razorpay opens its popup** (previously the response was ignored)
+- Retrying payment reuses the same order, so no duplicates
+- Payment errors now show the real reason instead of a generic message
+- **CORS fix** (`x-client-info` header) in `payment-create`, `refund-create` and `ai-chat`, which caused "payment could not be started" and "assistant is unavailable"
+- Stripe webhook now confirms `checkout.session.completed`
+
+**Also built:** a lightweight HTML/CSS/JS + Supabase starter (3D three.js hero, store, prototypes, learn, support) with a compact RLS schema.
+
+## 🗺️ Roadmap
+
+| Now (shipped) | Next | Later |
+|---|---|---|
+| Tenant-safe schema + RLS | Assignments and grading | Warehouses, batch / serial tracking, RFQs |
+| Commerce, quotes, prototypes | Calendar, task assignees, attachments | AI document analysis, recommendations |
+| LMS, CRM, inventory, finance | Role editor UI, invitations, MFA UI | English, Telugu, Hindi (i18n) |
+| AI Copilot with confirmations | Partial refunds, server-side PDF, Excel export | Integration tests against live Supabase |
+
+Remaining spec tables: branches, departments, variants, coupons, reviews. Future idea (not built): live telemetry from customer IoT prototypes through Supabase Realtime.
+
+## 🧪 Tests
+
+```bash
+npm test          # vitest
+npm run typecheck
+```
+
+## 📄 License
+
+Add a `LICENSE` file of your choice (MIT is a common default).
+
+<div align="center">
+
+**Forge**: sell, build and teach on one secure platform.<br/>
+Made by **Team Blasters**
+
+</div>
