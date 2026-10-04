@@ -27,4 +27,4 @@ Every important event (order, quotation, ticket, project, certificate) creates a
 The assistant only proposes actions (`cancel_order`, `create_ticket`). The user must press Confirm; execution then runs under the user's own session, so RLS/RBAC decide, and it is audit-logged.
 
 ## Tests
-`npm test` (vitest): CSV safety, prototype workflow, validation, AI action allow-list.
+`npm test` (vitest): CSV safety, prototyp give the readme with best ui and online images
